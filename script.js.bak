@@ -1,0 +1,51 @@
+const canvas = document.getElementById("canvas1");
+const ctx = canvas.getContext('2d');
+
+const  CANVAS_WIDTH = canvas.width = 1499;
+const  CANVAS_HEIGHT = canvas.height = 2667;
+
+let gameSpeed = 10;
+
+const spaceBackground = new Image();
+spaceBackground.src = 'assets/bg4a.png';
+
+const rocks = new Image();
+rocks.src = 'assets/bg4b.png';
+
+class Layer {
+    constructor(image, timeModifier){
+        this.x = 0;
+        this.y = 0;
+        this.height = 2667;
+        this.width = 1499;
+        this.image = image;
+        this.timeModifier = timeModifier;
+        this.speed =  gameSpeed * this.timeModifier;
+    }
+
+    update(){
+        this.speed = gameSpeed * this.timeModifier;
+        if(this.y >= this.height){
+            this.y = 0;
+        }
+        this.y = Math.floor(this.y + this.speed);
+    }
+    draw(){
+        ctx.drawImage(this.image, this.x, this.y, this.width, this.height); 
+        ctx.drawImage(this.image, this.x, this.y - this.height, this.width, this.height); 
+    }
+}
+
+const layer1 = new Layer(spaceBackground, 1)
+const layer2 = new Layer(rocks, 0.5); 
+
+const layers = [layer1, layer2];
+function animate(){
+    ctx.clearRect(0,0,CANVAS_WIDTH, CANVAS_HEIGHT);
+    layers.forEach(element => {
+        element.update(); 
+        element.draw();
+    });
+    requestAnimationFrame(animate);
+}
+animate();
