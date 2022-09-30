@@ -155,10 +155,10 @@ class Enemy {
     }
 
     update(){
-        this.x -= 2;
         if(-this.game.width  > this.x){
             this.alive = false;
-            this.x = this.game.width
+        }else{
+            this.x -= 2;
         }
     }
 
@@ -264,7 +264,11 @@ window.addEventListener('load', function() {
     /**Object pools */
     
     const createEnemyFunc = () => new Enemy(enemy1Img,enemyImgWidh, enemyImgHeight, game);
-    const resetEnemyFunc = (enemy) => {return enemy};
+    const resetEnemyFunc = (enemy) => {
+        enemy.y = Math.random() * game.height;
+        enemy.x = game.width; 
+        return enemy
+    };
     const enemyPool = new ObjectPool(createEnemyFunc, resetEnemyFunc, 20, game);
 
     const createNormalProjectileFunc = () => new Projectile(playerNormalProjectileImg,nomalProjectileWidh,normalProjectileHeight,game, player.x, player.y);
@@ -275,6 +279,9 @@ window.addEventListener('load', function() {
     };
     const normalProjectilePool = new ObjectPool(createNormalProjectileFunc, resetNormalProjectileFunc, 10, game);
 
+
+    /* Events listeners */
+
     this.window.addEventListener('mousemove', function(e){
         let positionX = e.x - canvasPosition.x;
         let positionY = e.y - canvasPosition.y;
@@ -283,7 +290,7 @@ window.addEventListener('load', function() {
 
     this.window.addEventListener('click', function(e){
         var shoot = normalProjectilePool.getDeletedElement();
-        console.log(shoot);
+
         normalProjectilePool.releaseElement(shoot);
     });
 
