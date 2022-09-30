@@ -34,6 +34,9 @@ playerImg.src = 'assets/players/player_6.png';
 const enemy1Img = new Image(); 
 enemy1Img.src = 'assets/enemies/en_19.png';
 
+const playerNormalProjectileImg = new Image();
+playerNormalProjectileImg.src = 'assets/shoots/shoot_5.png';
+
 /** Layer class for the parallax efect.
  * @image the image that the layer will render
  * @timeModifier how fast the layer will move
@@ -84,11 +87,13 @@ class Player {
         this.height = spriteHeight * 0.15;
     }
 
-    update(){
+    update(x, y){
+        this.x = x;
+        this.y =  y;
     }
 
     draw(){
-        this.game.ctx.drawImage(this.image, 0, 0, this.spriteWidth, this. spriteHeight, this.x - this.width / 2 , this.y - this.height / 2, this.width,  this.height);
+        this.game.ctx.drawImage(this.image, 0, 0, this.spriteWidth, this.spriteHeight, this.x - this.width / 2 , this.y - this.height / 2, this.width,  this.height);
     }
 }
 
@@ -162,6 +167,33 @@ class Enemy {
     }
 }
 
+class Projectile {
+    constructor(image, spriteWidth, spriteHeight, game, x = 50, y = 500, shootSpeed = 10) {
+        this.game = game;
+        this.x = x;
+        this.y = y;
+        this.alive = true;
+        this.image = image;
+        this.spriteWidth = spriteWidth; 
+        this.spriteHeight = spriteHeight;
+        this.width = spriteWidth * 0.10;
+        this.height = spriteHeight * 0.10;
+        this.shootSpeed = shootSpeed;
+    }
+
+    update(){
+        if(this.y < 0){
+            this.alive = false;
+        }else{
+            this.y -= this.shootSpeed;
+        }
+    }
+
+    draw(){
+        this.game.ctx.drawImage(this.image, 0, 0, this.spriteWidth, this. spriteHeight, this.x - this.width / 2 , this.y - this.height / 2, this.width,  this.height);
+    }
+}
+
 
 class ObjectPool {
     #poolArray
@@ -171,12 +203,14 @@ class ObjectPool {
       constructorFunction,
       resetFunction = (obj) => obj,
       initialSize = 1000,
+      game
     ) {
       this.resetFunction = resetFunction;
       this.constructorFunction = constructorFunction;
       this.#poolArray = new Array(initialSize)
         .fill(0)
         .map(() => this.createElement());
+        this.game = game;
     }
 
     createElement() {
@@ -184,11 +218,11 @@ class ObjectPool {
       return data;
     }
 
-    getElement(game) {
+    getElement() {
       for (let i = 0; i < this.#poolArray.length; i++) {
         if (this.#poolArray[i].alive === true) {
-            game.update(this.#poolArray[i]);
-            game.draw(this.#poolArray[i]);
+            this.game.update(this.#poolArray[i]);
+            this.game.draw(this.#poolArray[i]);
         }
       }
     }
@@ -213,27 +247,47 @@ window.addEventListener('load', function() {
     
     /** Initialize objects */
 
-    /**backgounds */
+    /**objects*/
     const game = new Game(ctx, canvas.width, canvas.height);
     const playerImgWidh = 894;
     const playerImgHeight = 930;
     const enemyImgWidh = 651;
     const enemyImgHeight = 612;
-    const stars = new Layer(spaceBackground, 0.5)
+    const nomalProjectileWidh = 194;
+    const normalProjectileHeight = 888;
+    const stars = new Layer(spaceBackground, 0.5);
     const asteroits = new Layer(rocks, 1); 
     const background = [stars, asteroits];
     const player = new Player( 200, game.height - playerImgHeight - 50 , playerImg, playerImgWidh, playerImgHeight, game);
+    const playerNomalShot = new Projectile(playerNormalProjectileImg,nomalProjectileWidh,normalProjectileHeight,game,-50, -50);
 
+    /**Object pools */
+    
     const createEnemyFunc = () => new Enemy(enemy1Img,enemyImgWidh, enemyImgHeight, game);
     const resetEnemyFunc = (enemy) => {return enemy};
-    const enemyPool = new ObjectPool(createEnemyFunc, resetEnemyFunc, 20);
+    const enemyPool = new ObjectPool(createEnemyFunc, resetEnemyFunc, 20, game);
+
+    const createNormalProjectileFunc = () => new Projectile(playerNormalProjectileImg,nomalProjectileWidh,normalProjectileHeight,game, player.x, player.y);
+    const resetNormalProjectileFunc = (shoot) => {
+        shoot.x = player.x;
+        shoot.y = player.y;
+        return shoot;
+    };
+    const normalProjectilePool = new ObjectPool(createNormalProjectileFunc, resetNormalProjectileFunc, 10, game);
 
     this.window.addEventListener('mousemove', function(e){
         let positionX = e.x - canvasPosition.x;
         let positionY = e.y - canvasPosition.y;
-        player.x = positionX;
-        player.y = positionY; 
-    })
+        player.update(positionX, positionY);
+    });
+
+    this.window.addEventListener('click', function(e){
+        var shoot = normalProjectilePool.getDeletedElement();
+        console.log(shoot);
+        normalProjectilePool.releaseElement(shoot);
+    });
+
+
     
     /** Main game loop function */
     function animate(timeStamp){
@@ -241,11 +295,12 @@ window.addEventListener('load', function() {
         ctx.clearRect(0,0,CANVAS_WIDTH, CANVAS_HEIGHT);
         const deltatime = timeStamp - lastTime;
         lastTime = timeStamp;
-        
-        game.update(background, deltatime);
+        game.update(background);
+        game.update(playerNomalShot);
         game.draw(background);
+        normalProjectilePool.getElement();
         game.draw(player);
-        enemyPool.getElement(game);
+        enemyPool.getElement();
         game.timeCounterEnemies(deltatime, enemyPool)
         gameFrame++;
         requestAnimationFrame(animate);
