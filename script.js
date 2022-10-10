@@ -2,7 +2,8 @@
 
 /**TODO --This list is either here because I do not have time or my mental abilities--
  * - Object pool (must work for any array object), need some reviews and some refactoring
- * - I really need to refactor a lot of thing. the variables are a mess, like, the objects need to grab the global variables from the Game class, not from outside.
+ * - I really need to refactor a lot of things. The variables are a mess, like, the objects need to grab the "shared" variables from the Game class, not from outside.
+ * - I dont know what is happening with the explotion animation, but it needs to be fix. How it is now really bugs me. 
  */
 
 const canvas = document.getElementById("canvas1");
@@ -322,7 +323,7 @@ class ObjectPool {
     update(){
         if(this.imageNumber < 10 ){
             this.image.src = `assets/explosion/exb_00${this.imageNumber}.png`;
-        }else if(this.imageNumber < 42){
+        }else if(this.imageNumber <= 42){
             this.image.src = `assets/explosion/exb_0${this.imageNumber}.png`;
         }else {
             this.alive = false;
@@ -388,7 +389,7 @@ window.addEventListener('load', function() {
     const createExplotionFunc = () => new Explotion(explosionImgWidh, explosionImgHeight, game);
     const resetExplotionFunc = (explotion) => {
         explotion.imageNumber = 0;
-        explotion.image.src = `assets/explosion/exb_00${explotion.imageNumber}.png`;
+        explotion.image.src = `assets/explosion/exb_000.png`;
         return explotion;
     };
 
@@ -415,6 +416,7 @@ window.addEventListener('load', function() {
     /** Main game loop function */
     function animate(timeStamp){
         /** Background animation */
+
         ctx.clearRect(0,0,CANVAS_WIDTH, CANVAS_HEIGHT);
         const deltatime = timeStamp - lastTime;
         lastTime = timeStamp;
@@ -422,10 +424,11 @@ window.addEventListener('load', function() {
         game.update(background);
         game.draw(background);
 
+        
+        explotionsPool.updateAndDrawAliveElements();
 
         normalProjectilePool.updateAndDrawAliveElements();
 
-        explotionsPool.updateAndDrawAliveElements();
 
         game.draw(player);
 
