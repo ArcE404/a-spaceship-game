@@ -191,7 +191,7 @@ class Player {
 
     draw(){
         this.game.ctx.drawImage(this.image, 0, 0, this.spriteWidth, this.spriteHeight, this.x - this.width / 2 , this.y - this.height / 2, this.width,  this.height);
-        this.game.ctx.strokeRect(this.x - this.width / 4 , this.y - this.height / 4, this.width / 2 , this.height / 2);
+        //this.game.ctx.strokeRect(this.x - this.width / 4 , this.y - this.height / 4, this.width / 2 , this.height / 2);
     }
 }
 
@@ -218,7 +218,7 @@ class Enemy {
 
     draw(){
         this.game.ctx.drawImage(this.image, 0, 0, this.spriteWidth, this. spriteHeight, this.x - this.width / 2 , this.y - this.height / 2, this.width,  this.height);
-        this.game.ctx.strokeRect(this.x - this.width / 4 , this.y - this.height / 4, this.width / 2 , this.height / 2);
+        //this.game.ctx.strokeRect(this.x - this.width / 4 , this.y - this.height / 4, this.width / 2 , this.height / 2);
     }
 }
 
@@ -246,7 +246,7 @@ class Projectile {
 
     draw(){
         this.game.ctx.drawImage(this.image, 0, 0, this.spriteWidth, this. spriteHeight, this.x - this.width / 2 , this.y - this.height / 2, this.width,  this.height);
-        this.game.ctx.strokeRect(this.x - this.width / 4 , this.y - this.height / 4, this.width / 2 , this.height / 2);
+        //this.game.ctx.strokeRect(this.x - this.width / 4 , this.y - this.height / 4, this.width / 2 , this.height / 2);
     }
 }
 
