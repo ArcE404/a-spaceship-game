@@ -363,8 +363,6 @@ window.addEventListener('load', function() {
     const background = [stars, asteroits];
     const game = new Game(ctx, canvas.width, canvas.height, gameFrame, staggerFrames);
     const player = new Player( 200, game.height - playerImgHeight - 50 , playerImg, playerImgWidh, playerImgHeight, game);
-    const playerNomalShot = new Projectile(playerNormalProjectileImg,nomalProjectileWidh,normalProjectileHeight,game,-50, -50);
-    const explotion = new Explotion(explosionImgWidh, explosionImgHeight, game);
 
     /**Object pools */
     
