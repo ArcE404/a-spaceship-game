@@ -3,7 +3,7 @@
 /**TODO --This list is either here because I do not have time or my mental abilities--
  * - Object pool (must work for any array object), need some reviews and some refactoring
  * - I really need to refactor a lot of things. The variables are a mess, like, the objects need to grab the "shared" variables from the Game class, not from outside.
- * - I dont know what is happening with the explotion animation, but it needs to be fix. How it is now really bugs me. 
+ * - I dont know what is happening with the explotion animation, but it needs to be fix. 
  */
 
 const canvas = document.getElementById("canvas1");
@@ -58,7 +58,26 @@ class Game {
         this.enemyTimer = 0;
         this.gameFrame = gameFrame;
         this.staggerFrames = staggerFrames;
-    }
+        this.puntos = 0;
+        this.pointsBoard = document.getElementById("puntos");
+        this.createExplotionFunc = () => {
+            var array = [];
+            for(var i = 0; i < 42; i++){
+                if( i < 10 ){
+                    var img = new Image();
+                    img.src = `assets/explosion/exb_00${i}.png`;
+                    array.push(img);
+                }else if(i <= 42){
+                    var img = new Image();
+                    img.src = `assets/explosion/exb_0${i}.png`;
+                    array.push(img);
+                }
+            }
+            return array;
+        }
+        this.explotions = this.createExplotionFunc();
+        console.log(this.explotions)
+        }
     
     update(object){
         if(object.length){
@@ -91,21 +110,30 @@ class Game {
         enemies.forEach((enemy) => {
             var enemeyHitbox = {x : enemy.x - enemy.width / 4, y : enemy.y - enemy.height / 4, width : enemy.width / 2, height : enemy.height / 2};
 
-            this.analiseCollition(playerHitbox, enemeyHitbox);
+            if(this.analiseCollition(playerHitbox, enemeyHitbox)){
+                this.releaseExplotion(explotions, player)
+                player.alive = false;
+            }
 
             projectiles.forEach((projectile) => {
                 var projectileHitbox = {x : projectile.x - projectile.width / 4, y : projectile.y - projectile.height / 4, width : projectile.width / 2, height : projectile.height / 2};
                 if(this.analiseCollition(enemeyHitbox, projectileHitbox)){
-                    var explotion = explotions.getDeletedElement();
-                    explotion.x = enemy.x;
-                    explotion.y = enemy.y;
-                    explotions.releaseElement(explotion);
+                    this.releaseExplotion(explotions, enemy);
                     enemy.alive = false;
                     projectile.alive = false;
+                    this.puntos++;
+                    this.pointsBoard.innerText = `Puntos: ${this.puntos}`
                 }
             });
 
         })
+    }
+
+    releaseExplotion(explotions, entity){
+        var explotion = explotions.getDeletedElement();
+        explotion.x = entity.x;
+        explotion.y = entity.y;
+        explotions.releaseElement(explotion);
     }
 
     
@@ -158,7 +186,7 @@ constructor(image, timeModifier){
     }
     draw(){
         ctx.drawImage(this.image, this.x, this.y, this.width, this.height); 
-        ctx.drawImage(this.image, this.x, this.y - this.height, this.width, this.height); 
+        //ctx.drawImage(this.image, this.x, this.y - this.height, this.width, this.height); 
     }
 }
 
@@ -182,6 +210,7 @@ class Player {
         this.spriteHeight = spriteHeight;
         this.width = spriteWidth * 0.15;
         this.height = spriteHeight * 0.15;
+        this.alive = true;
     }
 
     update(x, y){
@@ -190,8 +219,10 @@ class Player {
     }
 
     draw(){
-        this.game.ctx.drawImage(this.image, 0, 0, this.spriteWidth, this.spriteHeight, this.x - this.width / 2 , this.y - this.height / 2, this.width,  this.height);
-        //this.game.ctx.strokeRect(this.x - this.width / 4 , this.y - this.height / 4, this.width / 2 , this.height / 2);
+        if(this.alive){
+            this.game.ctx.drawImage(this.image, 0, 0, this.spriteWidth, this.spriteHeight, this.x - this.width / 2 , this.y - this.height / 2, this.width,  this.height);
+            //this.game.ctx.strokeRect(this.x - this.width / 4 , this.y - this.height / 4, this.width / 2 , this.height / 2);
+        }
     }
 }
 
@@ -304,8 +335,11 @@ class ObjectPool {
   }
 
 
-
-  class Explotion{
+  
+  /** This will happen once the page is loading */
+  window.addEventListener('load', function() {
+ 
+    class Explotion{
     constructor(spriteWidth, spriteHeight, game, x = 50, y = 50, image = new Image()) {
         this.game = game;
         this.x = x;
@@ -322,9 +356,10 @@ class ObjectPool {
 
     update(){
         if(this.imageNumber < 10 ){
-            this.image.src = `assets/explosion/exb_00${this.imageNumber}.png`;
-        }else if(this.imageNumber <= 42){
-            this.image.src = `assets/explosion/exb_0${this.imageNumber}.png`;
+            this.image = game.explotions[this.imageNumber]
+        }else if(this.imageNumber < 42){
+            this.image = game.explotions[this.imageNumber]
+
         }else {
             this.alive = false;
         }
@@ -339,9 +374,7 @@ class ObjectPool {
 
 
 
-/** This will happen once the page is loading */
 
-window.addEventListener('load', function() {
     
     /** Initialize objects */
 
@@ -405,8 +438,10 @@ window.addEventListener('load', function() {
 
     /** shoot event */
     this.window.addEventListener('click', function(e){
-        var shoot = normalProjectilePool.getDeletedElement();
-        normalProjectilePool.releaseElement(shoot);
+        if(player.alive){
+            var shoot = normalProjectilePool.getDeletedElement();
+            normalProjectilePool.releaseElement(shoot);
+        }
     });
 
 
@@ -425,16 +460,15 @@ window.addEventListener('load', function() {
         
         explotionsPool.updateAndDrawAliveElements();
 
-        normalProjectilePool.updateAndDrawAliveElements();
-
-
-        game.draw(player);
+        
+        if(player.alive){
+            normalProjectilePool.updateAndDrawAliveElements();
+            game.draw(player);
+            game.detectCollition(player, enemyPool.getAliveElements(), normalProjectilePool.getAliveElements(), explotionsPool);
+        }
 
         enemyPool.updateAndDrawAliveElements();
         game.timeCounterEnemies(deltatime, enemyPool);
-
-        game.detectCollition(player, enemyPool.getAliveElements(), normalProjectilePool.getAliveElements(), explotionsPool);
-
         game.setGameframe(gameFrame++);
         requestAnimationFrame(animate);
     }
