@@ -40,8 +40,15 @@ enemy1Img.src = 'assets/enemies/en_19.png';
 const playerNormalProjectileImg = new Image();
 playerNormalProjectileImg.src = 'assets/shoots/shoot_5.png';
 
+/** Banners and boards render */
 
+const gameOverBanner = document.getElementById("gameOverBanner");
+gameOverBanner.hidden = true;
 
+const retryButton = document.getElementById("retryButton");
+retryButton.hidden = true;
+
+const pointsBoard = document.getElementById("puntos");
 /** test space */
 
 /** end test space */
@@ -53,13 +60,13 @@ class Game {
         this.ctx = ctx;
         this.width = width; 
         this.height = height;
+        this.retryGameFunction = null;
         this.enemies = [];
         this.enemyInterval = 1000;
         this.enemyTimer = 0;
         this.gameFrame = gameFrame;
         this.staggerFrames = staggerFrames;
         this.puntos = 0;
-        this.pointsBoard = document.getElementById("puntos");
         this.createExplotionFunc = () => {
             var array = [];
             for(var i = 0; i < 42; i++){
@@ -86,7 +93,7 @@ class Game {
             object.update();
         }
     }
-    
+
     timeCounterEnemies(deltatime, enemyPool){
         if(this.enemyTimer > this.enemyInterval){
             this.#addNewEnemy(enemyPool);
@@ -111,8 +118,7 @@ class Game {
             var enemeyHitbox = {x : enemy.x - enemy.width / 4, y : enemy.y - enemy.height / 4, width : enemy.width / 2, height : enemy.height / 2};
 
             if(this.analiseCollition(playerHitbox, enemeyHitbox)){
-                this.releaseExplotion(explotions, player)
-                player.alive = false;
+                this.gameOverFunction(explotions, player);
             }
 
             projectiles.forEach((projectile) => {
@@ -122,11 +128,18 @@ class Game {
                     enemy.alive = false;
                     projectile.alive = false;
                     this.puntos++;
-                    this.pointsBoard.innerText = `Puntos: ${this.puntos}`
+                    pointsBoard.innerText = `Points: ${this.puntos}`
                 }
             });
 
         })
+    }
+
+    gameOverFunction(explotions, player){
+        this.releaseExplotion(explotions, player)
+        player.alive = false;
+        gameOverBanner.hidden = false; 
+        retryButton.hidden = false;
     }
 
     releaseExplotion(explotions, entity){
@@ -443,6 +456,15 @@ class ObjectPool {
             normalProjectilePool.releaseElement(shoot);
         }
     });
+
+    /** Retry game event */
+    retryButton.addEventListener("click", function(e){
+        player.alive = true;
+        game.puntos = 0;
+        retryButton.hidden = true;
+        gameOverBanner.hidden = true; 
+        pointsBoard.innerText = 'Points:'
+    })
 
 
     
